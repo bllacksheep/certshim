@@ -11,7 +11,7 @@ import (
 
 type Certificate struct {
 	Name string
-	Pem  []byte
+	Pem  string
 }
 
 func GetCertificateChain(fqdn string) []*x509.Certificate {
@@ -28,13 +28,16 @@ func GetCertificateChain(fqdn string) []*x509.Certificate {
 }
 
 func PemEncodeCertificate(cert *x509.Certificate) *Certificate {
-	name := cert.Issuer.CommonName
+	certificate_common_name := cert.Issuer.CommonName
+	certificate_pem_bytes := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	})
+	certificate_pem_armored := string(certificate_pem_bytes)
 	return &Certificate{
-		name,
-		pem.EncodeToMemory(&pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: cert.Raw,
-		})}
+		certificate_common_name,
+		certificate_pem_armored,
+	}
 }
 
 func main() {
