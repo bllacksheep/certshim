@@ -10,8 +10,8 @@ import (
 )
 
 type Certificate struct {
-	Issuer []byte
-	Pem    []byte
+	Name string
+	Pem  []byte
 }
 
 func GetCertificateChain(fqdn string) []*x509.Certificate {
@@ -28,14 +28,13 @@ func GetCertificateChain(fqdn string) []*x509.Certificate {
 }
 
 func PemEncodeCertificate(cert *x509.Certificate) *Certificate {
-	rsa := pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: cert.Raw,
-	})
+	name := cert.Issuer.CommonName
 	return &Certificate{
-		cert.RawIssuer,
-		rsa,
-	}
+		name,
+		pem.EncodeToMemory(&pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: cert.Raw,
+		})}
 }
 
 func main() {
@@ -43,6 +42,6 @@ func main() {
 	chain := GetCertificateChain(domain)
 	for _, certificate := range chain {
 		cert := PemEncodeCertificate(certificate)
-		fmt.Printf("%v\n", string(cert.Issuer))
+		fmt.Printf("%v\n", string(cert.Name))
 	}
 }
