@@ -3,11 +3,16 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"log"
 	"os"
-	"encoding/pem"
 )
+
+type Certificate struct {
+	Issuer []byte
+	Pem    []byte
+}
 
 func GetCertificateChain(fqdn string) []*x509.Certificate {
 	conf := &tls.Config{
@@ -22,19 +27,22 @@ func GetCertificateChain(fqdn string) []*x509.Certificate {
 	return conn.ConnectionState().PeerCertificates
 }
 
-func PemEncodeCertificate(cert *x509.Certificate) []byte {
+func PemEncodeCertificate(cert *x509.Certificate) *Certificate {
 	rsa := pem.EncodeToMemory(&pem.Block{
-		Type: "CERTIFICATE",
+		Type:  "CERTIFICATE",
 		Bytes: cert.Raw,
 	})
-	return rsa
+	return &Certificate{
+		cert.RawIssuer,
+		rsa,
+	}
 }
 
 func main() {
 	domain := os.Args[1]
 	chain := GetCertificateChain(domain)
 	for _, certificate := range chain {
-		b := PemEncodeCertificate(certificate)
-		fmt.Printf("%v\n", string(b))
+		cert := PemEncodeCertificate(certificate)
+		fmt.Printf("%v\n", string(cert.Issuer))
 	}
 }
