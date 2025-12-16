@@ -9,7 +9,7 @@ import (
 	"encoding/pem"
 )
 
-func Get(fqdn string) []*x509.Certificate {
+func GetCertificateChain(fqdn string) []*x509.Certificate {
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
 	}
@@ -22,29 +22,19 @@ func Get(fqdn string) []*x509.Certificate {
 	return conn.ConnectionState().PeerCertificates
 }
 
-func Pem(cert *x509.Certificate) []byte {
-	x509AsBytes, err := x509.MarshalPKIXPublicKey(cert.PublicKey)
-	if err != nil {
-		log.Println("Marshal error", err)
-		return nil
-	}
-
+func PemEncodeCertificate(cert *x509.Certificate) []byte {
 	rsa := pem.EncodeToMemory(&pem.Block{
-		Type: "RSA PUBLIC KEY",
-		Bytes: x509AsBytes,
+		Type: "CERTIFICATE",
+		Bytes: cert.Raw,
 	})
 	return rsa
 }
 
 func main() {
-
-	certs := Get(os.Args[1])
-
-	fmt.Printf("%#v\n", certs)
-
-	for _, c := range certs {
-		p := Pem(c)
-		fmt.Printf("%v\n", p)
+	domain := os.Args[1]
+	chain := GetCertificateChain(domain)
+	for _, certificate := range chain {
+		b := PemEncodeCertificate(certificate)
+		fmt.Printf("%v\n", string(b))
 	}
-
 }
