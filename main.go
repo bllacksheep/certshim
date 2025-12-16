@@ -4,10 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 )
+
+const path string = "/usr/local/share/ca-certificates"
+const ext string = ".pem.crt"
 
 type Certificate struct {
 	Name string
@@ -45,6 +48,12 @@ func main() {
 	chain := GetCertificateChain(domain)
 	for _, certificate := range chain {
 		cert := PemEncodeCertificate(certificate)
-		fmt.Printf("%v\n", string(cert.Name))
+		full_path := filepath.Join(path, cert.Name + ext)
+		f, err := os.OpenFile(full_path, os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		f.WriteString(cert.Pem)
 	}
 }
