@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"encoding/pem"
 )
 
-func cert_get(addr string) []*x509.Certificate {
+func Get(fqdn string) []*x509.Certificate {
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
 	}
-	conn, err := tls.Dial("tcp", addr+":443", conf)
+	conn, err := tls.Dial("tcp", fqdn+":443", conf)
 	if err != nil {
 		log.Println("Dial error", err)
 		return nil
@@ -21,13 +22,29 @@ func cert_get(addr string) []*x509.Certificate {
 	return conn.ConnectionState().PeerCertificates
 }
 
+func Pem(cert *x509.Certificate) []byte {
+	x509AsBytes, err := x509.MarshalPKIXPublicKey(cert.PublicKey)
+	if err != nil {
+		log.Println("Marshal error", err)
+		return nil
+	}
+
+	rsa := pem.EncodeToMemory(&pem.Block{
+		Type: "RSA PUBLIC KEY",
+		Bytes: x509AsBytes,
+	})
+	return rsa
+}
+
 func main() {
-	certs := cert_get(os.Args[1])
+
+	certs := Get(os.Args[1])
 
 	fmt.Printf("%#v\n", certs)
 
 	for _, c := range certs {
-		fmt.Printf("%+v", c)
+		p := Pem(c)
+		fmt.Printf("%v\n", p)
 	}
 
 }
