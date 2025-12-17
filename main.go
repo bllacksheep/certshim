@@ -51,7 +51,10 @@ func localStore() string {
 	const local_certificate_store = ".local/share/ca-certificates"
 	user_home := os.Getenv("HOME")
 	local_store_fullpath := filepath.Join(user_home, local_certificate_store)
-	os.MkdirAll(local_store_fullpath, 0755)
+	err := os.MkdirAll(local_store_fullpath, 0755)
+	if err != nil {
+		panic(err)
+	}
 	return local_store_fullpath
 }
 
