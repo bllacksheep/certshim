@@ -52,9 +52,12 @@ func pemEncodeCertificates(chain []*x509.Certificate) []*Certificate {
 
 func localStore() string {
 	const local_certificate_store = ".local/share/ca-certificates"
-	user_home := os.Getenv("HOME")
+	user_home, err := os.UserHomeDir()
+	if err != nil {
+		panic("no home")
+	}
 	local_store_fullpath := filepath.Join(user_home, local_certificate_store)
-	err := os.MkdirAll(local_store_fullpath, 0755)
+	err = os.MkdirAll(local_store_fullpath, 0755)
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +75,10 @@ func InstallChain(certificate_chain []*x509.Certificate) {
 			panic(err)
 		}
 		defer f.Close()
-		f.WriteString(certificates[i].Pem)
+		_, err = f.WriteString(certificates[i].Pem)
+		if err != nil {
+			panic(err)
+		}
 		log.Println("installed:", local_cert_fullpath)
 	}
 }
