@@ -15,10 +15,11 @@ type Certificate struct {
 }
 
 func GetCertificateChain(fqdn string) []*x509.Certificate {
+	fqdn_verified := verifyDomain(fqdn)
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
 	}
-	conn, err := tls.Dial("tcp", fqdn+":443", conf)
+	conn, err := tls.Dial("tcp", fqdn_verified+":443", conf)
 	if err != nil {
 		log.Println("Dial error", err)
 		return nil
@@ -40,7 +41,7 @@ func PemEncodeCertificate(cert *x509.Certificate) *Certificate {
 	}
 }
 
-func VerifyDomain(d string) string {
+func verifyDomain(d string) string {
 	return d
 }
 
@@ -74,7 +75,5 @@ func main() {
 	if len(os.Args) < 2 {
 		panic("provide an fqdn as arg")
 	}
-	domain := VerifyDomain(os.Args[1])
-	chain := GetCertificateChain(domain)
-	InstallChain(chain)
+	InstallChain(GetCertificateChain(os.Args[1]))
 }
