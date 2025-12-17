@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-const certificate_local_store = ".local/share/ca-certificates"
+const certificate_local_store string = ".local/share/ca-certificates"
 const certificate_file_extension string = ".pem.crt"
 
 type Certificate struct {
