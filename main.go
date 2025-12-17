@@ -14,6 +14,10 @@ type Certificate struct {
 	Pem  string
 }
 
+func verifyDomain(d string) string {
+	return d
+}
+
 func GetCertificateChain(fqdn string) []*x509.Certificate {
 	fqdn_verified := verifyDomain(fqdn)
 	conf := &tls.Config{
@@ -40,9 +44,6 @@ func PemEncodeCertificate(cert *x509.Certificate) *Certificate {
 	}
 }
 
-func verifyDomain(d string) string {
-	return d
-}
 
 func localStore() string {
 	const local_certificate_store = ".local/share/ca-certificates"
