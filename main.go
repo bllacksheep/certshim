@@ -9,9 +9,6 @@ import (
 	"path/filepath"
 )
 
-const path string = "/usr/local/share/ca-certificates"
-const ext string = ".pem.crt"
-
 type Certificate struct {
 	Name string
 	Pem  string
@@ -59,6 +56,7 @@ func localStore() string {
 }
 
 func InstallChain(certificate_chain []*x509.Certificate) {
+	const ext string = ".pem.crt"
 	local_store := localStore()	
 	for i := 0; i < len(certificate_chain); i++ {
 		certificate := PemEncodeCertificate(certificate_chain[i])
