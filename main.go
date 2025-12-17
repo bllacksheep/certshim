@@ -13,8 +13,8 @@ const certificate_local_store string = ".local/share/ca-certificates"
 const certificate_file_extension string = ".pem.crt"
 
 type Certificate struct {
-	Name string
-	PemData  string
+	Name    string
+	PemData string
 }
 
 func verifyDomain(d string) string {
@@ -65,7 +65,6 @@ func localStore(location string) string {
 	}
 	return local_store_fullpath
 }
-
 
 func InstallChain(certificate_chain []*x509.Certificate) {
 	local_store := localStore(certificate_local_store)
