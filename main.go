@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,22 +12,21 @@ import (
 
 const certificate_local_store string = ".local/share/ca-certificates"
 const certificate_file_extension string = ".pem.crt"
+const ca_store_bypass string = "SSL_CERT_FILE="
 
 type Certificate struct {
 	Name    string
 	PemData string
 }
 
-func verifyDomain(d string) string {
-	return d
+func verifyDomain(d string) {
 }
 
 func GetCertificateChain(fqdn string) []*x509.Certificate {
-	fqdn_verified := verifyDomain(fqdn)
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
 	}
-	conn, err := tls.Dial("tcp", fqdn_verified+":443", conf)
+	conn, err := tls.Dial("tcp", fqdn+":443", conf)
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +66,7 @@ func localStore(location string) string {
 	return local_store_fullpath
 }
 
-func InstallChain(certificate_chain []*x509.Certificate) {
+func InstallChain(certificate_chain []*x509.Certificate, verbose bool) {
 	local_store := localStore(certificate_local_store)
 	certificates := pemEncodeCertificates(certificate_chain)
 	for i := 0; i < len(certificates); i++ {
@@ -80,13 +80,24 @@ func InstallChain(certificate_chain []*x509.Certificate) {
 		if err != nil {
 			panic(err)
 		}
-		log.Println("installed:", local_cert_fullpath)
+		if verbose == true {
+			log.Println("installed:", local_cert_fullpath)
+		}
+		fmt.Println("export " + ca_store_bypass + local_cert_fullpath)
 	}
 }
 
 func main() {
+	v := false
+
 	if len(os.Args) < 2 {
 		panic("provide an fqdn as arg")
+	} else if len(os.Args) > 2 {
+		v = true
 	}
-	InstallChain(GetCertificateChain(os.Args[1]))
+
+	fqdn := os.Args[1]
+	verifyDomain(fqdn)
+
+	InstallChain(GetCertificateChain(fqdn), v)
 }
