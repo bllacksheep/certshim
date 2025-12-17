@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 )
 
+const local_certificate_store = ".local/share/ca-certificates"
+const file_extension string = ".pem.crt"
+
 type Certificate struct {
 	Name string
 	Pem  string
@@ -50,13 +53,12 @@ func pemEncodeCertificates(chain []*x509.Certificate) []*Certificate {
 	return certificates
 }
 
-func localStore() string {
-	const local_certificate_store = ".local/share/ca-certificates"
-	user_home, err := os.UserHomeDir()
+func localStore(location string) string {
+	home, err := os.UserHomeDir()
 	if err != nil {
 		panic("no home")
 	}
-	local_store_fullpath := filepath.Join(user_home, local_certificate_store)
+	local_store_fullpath := filepath.Join(home, location)
 	err = os.MkdirAll(local_store_fullpath, 0755)
 	if err != nil {
 		panic(err)
@@ -64,9 +66,9 @@ func localStore() string {
 	return local_store_fullpath
 }
 
+
 func InstallChain(certificate_chain []*x509.Certificate) {
-	const file_extension string = ".pem.crt"
-	local_store := localStore()
+	local_store := localStore(local_certificate_store)
 	certificates := pemEncodeCertificates(certificate_chain)
 	for i := 0; i < len(certificates); i++ {
 		local_cert_fullpath := filepath.Join(local_store, certificates[i].Name+file_extension)
