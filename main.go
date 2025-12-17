@@ -14,7 +14,7 @@ const certificate_file_extension string = ".pem.crt"
 
 type Certificate struct {
 	Name string
-	Pem  string
+	PemData  string
 }
 
 func verifyDomain(d string) string {
@@ -77,7 +77,7 @@ func InstallChain(certificate_chain []*x509.Certificate) {
 			panic(err)
 		}
 		defer f.Close()
-		_, err = f.WriteString(certificates[i].Pem)
+		_, err = f.WriteString(certificates[i].PemData)
 		if err != nil {
 			panic(err)
 		}
