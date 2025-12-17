@@ -21,8 +21,7 @@ func GetCertificateChain(fqdn string) []*x509.Certificate {
 	}
 	conn, err := tls.Dial("tcp", fqdn_verified+":443", conf)
 	if err != nil {
-		log.Println("Dial error", err)
-		return nil
+		panic(err)
 	}
 	defer conn.Close()
 	return conn.ConnectionState().PeerCertificates
@@ -68,6 +67,7 @@ func InstallChain(certificate_chain []*x509.Certificate) {
 		}
 		defer f.Close()
 		f.WriteString(certificate.Pem)
+		log.Println("installed:", local_cert_fullpath)
 	}
 }
 
