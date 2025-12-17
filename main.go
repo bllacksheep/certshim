@@ -57,11 +57,11 @@ func localStore() string {
 }
 
 func InstallChain(certificate_chain []*x509.Certificate) {
-	const ext string = ".pem.crt"
+	const file_extension string = ".pem.crt"
 	local_store := localStore()	
 	for i := 0; i < len(certificate_chain); i++ {
 		certificate := PemEncodeCertificate(certificate_chain[i])
-		local_cert_fullpath := filepath.Join(local_store, certificate.Name + ext)
+		local_cert_fullpath := filepath.Join(local_store, certificate.Name + file_extension)
 		f, err := os.OpenFile(local_cert_fullpath, os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			panic(err)
