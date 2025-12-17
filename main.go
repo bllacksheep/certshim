@@ -31,19 +31,24 @@ func GetCertificateChain(fqdn string) []*x509.Certificate {
 	return conn.ConnectionState().PeerCertificates
 }
 
-func PemEncodeCertificate(cert *x509.Certificate) *Certificate {
-	certificate_common_name := cert.Issuer.CommonName
-	certificate_pem_bytes := pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: cert.Raw,
-	})
-	certificate_pem_armored := string(certificate_pem_bytes)
-	return &Certificate{
-		certificate_common_name,
-		certificate_pem_armored,
+func pemEncodeCertificates(chain []*x509.Certificate) []*Certificate {
+	var certificates []*Certificate
+	for i := 0; i < len(chain); i++ {
+		if chain[i].IsCA {
+			certificate_pem_bytes := pem.EncodeToMemory(&pem.Block{
+				Type:  "CERTIFICATE",
+				Bytes: chain[i].Raw,
+			})
+			certificate_pem_armored := string(certificate_pem_bytes)
+			certificate_common_name := chain[i].Issuer.CommonName
+			certificates = append(certificates, &Certificate{
+				certificate_common_name,
+				certificate_pem_armored,
+			})
+		}
 	}
+	return certificates
 }
-
 
 func localStore() string {
 	const local_certificate_store = ".local/share/ca-certificates"
@@ -58,16 +63,16 @@ func localStore() string {
 
 func InstallChain(certificate_chain []*x509.Certificate) {
 	const file_extension string = ".pem.crt"
-	local_store := localStore()	
-	for i := 0; i < len(certificate_chain); i++ {
-		certificate := PemEncodeCertificate(certificate_chain[i])
-		local_cert_fullpath := filepath.Join(local_store, certificate.Name + file_extension)
+	local_store := localStore()
+	certificates := pemEncodeCertificates(certificate_chain)
+	for i := 0; i < len(certificates); i++ {
+		local_cert_fullpath := filepath.Join(local_store, certificates[i].Name+file_extension)
 		f, err := os.OpenFile(local_cert_fullpath, os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			panic(err)
 		}
 		defer f.Close()
-		f.WriteString(certificate.Pem)
+		f.WriteString(certificates[i].Pem)
 		log.Println("installed:", local_cert_fullpath)
 	}
 }
