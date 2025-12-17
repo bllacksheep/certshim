@@ -47,20 +47,33 @@ func VerifyDomain(d string) string {
 	return d
 }
 
+func localStore() string {
+	const local_certificate_store = ".local/share/ca-certificates"
+	user_home := os.Getenv("HOME")
+	local_store_fullpath := filepath.Join(user_home, local_certificate_store)
+	os.MkdirAll(local_store_fullpath, 0755)
+	return local_store_fullpath
+}
+
+func InstallChain(certificate_chain []*x509.Certificate) {
+	local_store := localStore()	
+	for i := 0; i < len(certificate_chain); i++ {
+		certificate := PemEncodeCertificate(certificate_chain[i])
+		local_cert_fullpath := filepath.Join(local_store, certificate.Name + ext)
+		f, err := os.OpenFile(local_cert_fullpath, os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		f.WriteString(certificate.Pem)
+	}
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		panic("provide an fqdn as arg")
 	}
 	domain := VerifyDomain(os.Args[1])
 	chain := GetCertificateChain(domain)
-	for _, certificate := range chain {
-		cert := PemEncodeCertificate(certificate)
-		full_path := filepath.Join(path, cert.Name + ext)
-		f, err := os.OpenFile(full_path, os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			panic(err)
-		}
-		defer f.Close()
-		f.WriteString(cert.Pem)
-	}
+	InstallChain(chain)
 }
