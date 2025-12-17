@@ -43,8 +43,15 @@ func PemEncodeCertificate(cert *x509.Certificate) *Certificate {
 	}
 }
 
+func VerifyDomain(d string) string {
+	return d
+}
+
 func main() {
-	domain := os.Args[1]
+	if len(os.Args) < 2 {
+		panic("provide an fqdn as arg")
+	}
+	domain := VerifyDomain(os.Args[1])
 	chain := GetCertificateChain(domain)
 	for _, certificate := range chain {
 		cert := PemEncodeCertificate(certificate)
